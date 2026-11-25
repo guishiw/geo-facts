@@ -1,0 +1,29 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "annotation.schema.json": "3dad8a9711baa067cccf2cc4a98e6ece06eef4c7cea9cded4df8dbd8a2421501",
+    "audit_event.schema.json": "d56448364282729a1a7bf02064e3163b72312d74001aa09ce7333b26a3b3cf72",
+    "claim.schema.json": "998a05591198c884a3e218398743c347f6a10fb4e1cbe43ede7cdeff013e0621",
+    "entity.schema.json": "20171a6423e5caf456030bdbd70487f0636561c4cfb4ec775f30b89a56d365a9",
+    "examples/annotation.examples.json": "f6d46cd50ffba9615019ea341bd1bb15892c15ac69f09abb5e25c711bfbb888f",
+    "examples/audit_event.examples.json": "ce83d197d8a6d25c9d36d72d53b5a1d521c25d2754b79cdbc0572748493b70e5",
+    "examples/claim.examples.json": "907e33488b3504b0848432f73a1cb23cab1aef26aab89be641c20f78600b8aad",
+    "examples/entity.examples.json": "7e3213bdbdd5504dfc8e18f0b90a3621a7733cbcfb72431195f7faf33da4d1b0",
+    "examples/fact.examples.json": "5ad867f6c554b1643846670fd8b103a1b9087c9ab5d0d7190a1e01095a3df1f7",
+    "examples/judgment.examples.json": "b3a44cbe0af1470c412f7a1b70d210f8f2d75e7e5eb215a6f6ac7521976de5ec",
+    "examples/manifest.examples.json": "e8cc2b20173257eaef68ad59659ac0fa29c511ecbc4147aac3ce6677eccef75e",
+    "examples/metric_result.examples.json": "729dff23e1a609a8ea32a501ad799ce6979b3275ec85903fbafe94bb54f3e0d3",
+    "examples/observation.examples.json": "48c1cb9b08e74f21fb3861f7a4076a27d2ee09fd866f91f5cbc62bb7bd52497a",
+    "examples/project.examples.json": "9f9611a469f8494c62b758ede0a0babd3448924004af126bea590b6af67309ef",
+    "examples/prompt_set.examples.json": "023b7088ff36039e135d636288d0949f252765a9159b7db371fd0902742e1208",
+    "fact.schema.json": "2dd5e5f14ddc68462c0d14f487ac74283ea3d6670b2315e1a46ff574a390a451",
+    "judgment.schema.json": "2563025ec89588d42b1f354cc19862799ed4b7771f253682e1e0a52b21879afd",
+    "manifest.schema.json": "91889803c770251c3e80d6c57c6662c295bbc4368b4ff8e817bdc33edb2f49bf",
+    "metric_result.schema.json": "565daf2d9145983d53e0544306f0be8193d38dd947cf4ed5c9cdf0840b71f749",
+    "observation.schema.json": "cb7a93f7572061b1efa65980023b4abc9eaf7372ba44d16b9ae38e2250ce71b1",
+    "project.schema.json": "23c3d5fda85c98ed0825aa52160ef43a26b8db6cbbc8949325f61549ce2e014a",
+    "prompt_set.schema.json": "dbc7479296a2faf454a6ba0ea3b281d3a7c4641d87761d233ed75f8ad2ca861a"
+  },
+  "source": "geo-verify/spec",
+  "version": "v1"
+}
