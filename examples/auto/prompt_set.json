@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "prompt_set_id": "auto-demo-prompts",
+  "project_id": "auto-demo",
+  "version": 1,
+  "previous_hash": null,
+  "prompts": [
+    {
+      "query_id": "Q001",
+      "text": "请介绍澜序 S7 的核心参数、售价和上市时间。",
+      "intent_type": "product",
+      "business_level": "L1",
+      "priority": "P0",
+      "source": "样例合成题库（虚构）",
+      "expects_recommendation": false,
+      "core_fact_ids": [
+        "F-S7-RANGE-CLTC",
+        "F-S7-PRICE",
+        "F-S7-BATTERY"
+      ]
+    },
+    {
+      "query_id": "Q002",
+      "text": "澜序 S7 现在的售价和续航表现如何？",
+      "intent_type": "product",
+      "business_level": "L1",
+      "priority": "P0",
+      "source": "样例合成题库（虚构）",
+      "expects_recommendation": false,
+      "core_fact_ids": [
+        "F-S7-PRICE",
+        "F-S7-RANGE-CLTC"
+      ]
+    },
+    {
+      "query_id": "Q003",
+      "text": "澜序 S7 和岑野 S7 的续航有什么区别？",
+      "intent_type": "comparison",
+      "business_level": "L2",
+      "priority": "P1",
+      "source": "样例合成题库（虚构）",
+      "expects_recommendation": false,
+      "core_fact_ids": [
+        "F-S7-RANGE-WLTC",
+        "F-S7-ACCEL"
+      ]
+    },
+    {
+      "query_id": "Q004",
+      "text": "澜序 X5 的电池容量和续航是多少？",
+      "intent_type": "product",
+      "business_level": "L1",
+      "priority": "P1",
+      "source": "样例合成题库（虚构）",
+      "expects_recommendation": false,
+      "core_fact_ids": [
+        "F-X5-RANGE-CLTC",
+        "F-X5-BATTERY"
+      ]
+    }
+  ],
+  "preregistration_hash": "3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d",
+  "sealed_by": "甲方项目负责人（虚构）",
+  "sealed_at": "2026-10-02T03:00:00Z",
+  "content_hash": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
+  "synthetic": true
+}
