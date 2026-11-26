@@ -233,3 +233,16 @@ def test_load_entities_errors(tmp_path: Path) -> None:
     with pytest.raises(InputError, match="第 2 行不符合 entity 契约") as info:
         load_entities(store)
     assert info.value.details["issues"][0]["path"] == "/role"
+
+
+def test_load_entities_keeps_last_record_per_entity(tmp_path: Path) -> None:
+    # entities.jsonl 只追加：import 更新实体时追加一条同 entity_id 的新记录，以最后一条为准。
+    updated = dict(WORLD[5], name="岑野 S7 旧款", aliases=[])
+    store = write_store(tmp_path / "store", [*WORLD, updated])
+    loaded = load_entities(store)
+    assert [e.entity_id for e in loaded] == [record["entity_id"] for record in WORLD]
+    s7 = next(e for e in loaded if e.entity_id == "product-cenye-s7")
+    assert s7.names == ("岑野 S7 旧款",)
+    # 只按最后一条记录识别：旧别名“S7”不再算竞品提及。
+    index = parse_draft("S7 对比", "txt").index("visible")
+    assert find_mentions(index, loaded) == []

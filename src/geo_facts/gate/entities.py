@@ -1,7 +1,7 @@
 """事实库目录的只读访问（不依赖 store 模块，直接按契约读文件）与实体名称识别。
 
 - `store.json` 的 timezone：把 UTC 时间换算成自然日；没有该文件或该字段时用 Asia/Shanghai。
-- `entities.jsonl`：entity 契约；逐条校验，不合契约 → 输入错误。
+- `entities.jsonl`：entity 契约；逐条校验，不合契约 → 输入错误；同一 entity_id 以最后一条为准。
 
 名称识别（供竞品比较检查使用）：
 - 名称与别名按“紧凑键”匹配：忽略全半角、大小写、空格与连字符（“岑野 K5”“岑野k5”“岑野Ｋ－５”等价）；
@@ -68,7 +68,9 @@ def load_entities(store: Path) -> tuple[Entity, ...]:
     path = require_store(store) / "entities.jsonl"
     if not path.is_file():
         raise InputError("事实库缺少 entities.jsonl", details={"store": store.name})
-    entities: list[Entity] = []
+    # entities.jsonl 只追加（import 更新实体时追加新记录）：同一 entity_id 以最后一条为准，
+    # 位置取首次出现处，保证顺序稳定。
+    entities: dict[str, Entity] = {}
     for number, record in iter_jsonl(path):
         issues = contracts.iter_issues("entity", record)
         if issues:
@@ -76,18 +78,16 @@ def load_entities(store: Path) -> tuple[Entity, ...]:
                 f"entities.jsonl 第 {number} 行不符合 entity 契约",
                 details={"line": number, "issues": [issue.to_dict() for issue in issues]},
             )
-        entities.append(
-            Entity(
-                entity_id=record["entity_id"],
-                kind=record["kind"],
-                role=record["role"],
-                name=record["name"],
-                aliases=tuple(record["aliases"]),
-                exclusions=tuple(record["exclusions"]),
-                parent_entity_id=record["parent_entity_id"],
-            )
+        entities[record["entity_id"]] = Entity(
+            entity_id=record["entity_id"],
+            kind=record["kind"],
+            role=record["role"],
+            name=record["name"],
+            aliases=tuple(record["aliases"]),
+            exclusions=tuple(record["exclusions"]),
+            parent_entity_id=record["parent_entity_id"],
         )
-    return tuple(entities)
+    return tuple(entities.values())
 
 
 def name_pattern(name: str) -> re.Pattern[str] | None:
