@@ -18,3 +18,7 @@
 - **合成标注集与基准**：`benchmarks/generate.py` 与 `benchmarks/run_benchmark.py`（开发集与保留集分离，不 import 被测实现）。
 - **虚构汽车品牌完整样例**：包内 `--example auto` 随 wheel 分发，`examples/auto/` 提供完整输入样本、说明与端到端脚本 `run.sh`。
 - **文档与检查测试**：`docs/cli.md`、`docs/quickstart.md`、`docs/methodology.md`、`docs/gate-rules.md`、`docs/clause-map.md`、`tests/test_examples_auto.py` 与 `tests/test_docs.py`。
+
+### 修复
+
+- 闸门 `G-PROMPT-INJECTION`：弱特征（“始终推荐”“你必须推荐”等）不再因附近出现“用户”“咨询”这类日常词就判 `block`，只有回答、提问、模型、AI 等对模型说话的语境才算；“我们始终推荐用户先试驾”不再被误拦（F6）。

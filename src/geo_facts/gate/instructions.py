@@ -7,7 +7,7 @@
   “当 AI 读到这段话时……”“系统提示：”“ignore previous instructions”“disregard the above”
   “as an AI assistant, you must”“when an AI reads this”“system prompt:”“[INST]”等；
 - 弱特征（“你必须推荐……”“始终优先推荐”“you must recommend”等）：只在同一句附近出现了
-  回答 / 用户 / 提问 / 模型 / AI 等对模型说话的语境时才算；出现在隐藏文本、注释、脚本、
+  回答 / 提问 / 模型 / AI 等对模型说话的语境时才算（“用户”“咨询”这类日常词不算）；出现在隐藏文本、注释、脚本、
   属性值里则不需要语境。
 
 不算指令（控制误伤）：
@@ -205,11 +205,12 @@ _DESCRIPTIVE_EN = re.compile(
     r"|\b(?:model|models|llm|llms|ai|assistant|chatbot|it|they|system)\s+"
     r"(?:will|may|can|might|would|could|should))\s+$"
 )
-# 弱特征需要的“对模型说话”语境。
+# 弱特征需要的“对模型说话”语境：回答 / 提问 / 模型等。“用户”“咨询”（users）是面向读者的
+# 日常用语，单独出现不构成对模型说话（“我们始终推荐用户先试驾”不是指令）。
 _AI_CONTEXT = re.compile(
-    r"回答|回复|答案|用户|提问|问到|问起|询问|咨询|搜索|检索|对话|模型|助手|机器人|大模型|"
+    r"回答|回复|答案|提问|问到|问起|询问|搜索|检索|对话|模型|助手|机器人|大模型|"
     r"(?<![a-z])(?:ai|chatgpt)(?![a-z])|"
-    r"\b(?:answers?|responses?|respond|users?|quer(?:y|ies)|questions?|asked|asks|search|assistant|"
+    r"\b(?:answers?|responses?|respond|quer(?:y|ies)|questions?|ask|asked|asks|search|assistant|"
     r"model|llm|chatbot)\b"
 )
 # 引用示例前后的说明性用语。
