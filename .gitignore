@@ -13,3 +13,6 @@ dist/
 *.egg-info/
 out/
 .DS_Store
+# 基准运行记录与工作目录（现场生成，不提交）
+benchmarks/runs.jsonl
+benchmarks/out/
