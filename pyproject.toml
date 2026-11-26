@@ -84,4 +84,4 @@ exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload"]
 # 模块落地时逐个加入；最终必须包含 store、normalize、claims、judge、gate。
 [tool.geo.coverage]
 minimum = 90
-modules = ["contracts", "canon", "jsonl", "normalize"]
+modules = ["contracts", "canon", "jsonl", "normalize", "store"]
