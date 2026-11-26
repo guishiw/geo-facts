@@ -36,7 +36,7 @@ from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from pathlib import Path
 from typing import Any
 
-GENERATOR_VERSION = "1.0"
+GENERATOR_VERSION = "1.1"  # 1.1：facts.csv 改为导入器公开模板的列与写法
 SPLITS = ("dev", "holdout")
 DEFAULT_SEEDS = {"dev": 20261008, "holdout": 90417}
 AS_OF = "2026-10-08"
@@ -1381,16 +1381,19 @@ def fact_record(row: FactRow) -> dict[str, Any]:
     }
 
 
+# 与 `geo-facts import --template csv` 的列与顺序一致（导入器的公开模板；tests 里有对照测试）。
+# 不带 version 列：同一 fact_id 的多行按文件顺序成为版本 1、2……（导入器的约定）。
 FACT_CSV_COLUMNS = [
     "fact_id",
     "entity_id",
     "attribute",
-    "aliases",
     "value",
+    "value_type",
     "unit",
     "conditions",
     "zone",
     "source_tier",
+    "source_type",
     "content_use",
     "is_core",
     "evidence_id",
@@ -1402,28 +1405,38 @@ FACT_CSV_COLUMNS = [
     "valid_from",
     "valid_until",
     "status",
+    "aliases",
+    "note",
+    "synthetic",
+    "ext",
 ]
+LIST_SEPARATOR = "; "
 
 
 def facts_csv(records: list[dict[str, Any]]) -> str:
-    """事实源 CSV：每行一个事实版本；同一 fact_id 的旧版本在前。conditions 写成 key=value;key=value，
-    aliases 用 | 分隔，空值留空。"""
+    """事实源 CSV（导入模板格式）：每行一个事实版本，同一 fact_id 的旧版本在前。
+    conditions 写成“键=值; 键=值”，aliases 用分号分隔，空值留空。"""
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=FACT_CSV_COLUMNS, lineterminator="\n")
     writer.writeheader()
     for record in records:
         evidence = record["evidence"]
+        value = record["value"]
+        owned = evidence["source_ref"].startswith("https://lanxu-auto.example/")
         writer.writerow(
             {
                 "fact_id": record["fact_id"],
                 "entity_id": record["entity_id"],
                 "attribute": record["attribute"],
-                "aliases": "|".join(record["aliases"]),
-                "value": record["value"],
+                "value": value,
+                "value_type": "number" if isinstance(value, int | float) else "text",
                 "unit": record["unit"] or "",
-                "conditions": ";".join(f"{k}={v}" for k, v in sorted(record["conditions"].items())),
+                "conditions": LIST_SEPARATOR.join(
+                    f"{k}={v}" for k, v in sorted(record["conditions"].items())
+                ),
                 "zone": record["zone"],
                 "source_tier": record["source_tier"],
+                "source_type": "企业官网" if owned else "评测媒体",
                 "content_use": record["content_use"],
                 "is_core": "true" if record["is_core"] else "false",
                 "evidence_id": evidence["evidence_id"],
@@ -1435,6 +1448,10 @@ def facts_csv(records: list[dict[str, Any]]) -> str:
                 "valid_from": record["valid_from"],
                 "valid_until": record["valid_until"] or "",
                 "status": record["status"],
+                "aliases": LIST_SEPARATOR.join(record["aliases"]),
+                "note": "",
+                "synthetic": "true" if record["synthetic"] else "false",
+                "ext": "",
             }
         )
     return buffer.getvalue()

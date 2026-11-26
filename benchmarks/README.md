@@ -32,9 +32,10 @@ DIR/
 └── meta.json                  {split, seed, generator_version, as_of, project_id, counts{...}, synthetic: true, note}
 ```
 
-- `facts.csv` 的列依次是：fact_id、entity_id、attribute、aliases、value、unit、conditions、zone、source_tier、content_use、is_core、evidence_id、source_name、source_ref、collected_at、last_verified_at、reviewer、valid_from、valid_until、status。
-  - aliases 用 `|` 分隔；conditions 写成 `key=value;key=value`；空值留空。
-  - 同一 fact_id 有两个版本（过期旧价在前、现价在后），版本号由导入时按顺序递增。
+- `facts.csv` 用导入器的公开模板（`geo-facts import --template csv`）：列与顺序和模板完全一致（fact_id、entity_id、attribute、value、value_type、unit、conditions、zone、source_tier、source_type、content_use、is_core、证据六列、valid_from、valid_until、status、aliases、note、synthetic、ext），可由 `geo-facts import` 直接导入。
+  - conditions 写成 `键=值; 键=值`，aliases 用分号分隔（与模板、导出一致）；空值留空。
+  - 不带 version 列：同一 fact_id 有两行（过期旧价在前、现价在后），导入时按文件顺序成为版本 1 与版本 2。
+- `entities.jsonl` 由 `geo-facts import STORE --input store-src/entities.jsonl` 导入（json 格式的 entity 记录），不直接改事实库文件。
 
 ### 开发集与保留集的区别
 
@@ -98,9 +99,9 @@ python benchmarks/run_benchmark.py --split dev|holdout [--workdir DIR] [--json]
 
 - 默认工作目录是 `benchmarks/out/<split>`，每次运行清空重建。目录里带 `.bench-workdir` 标记；指定的目录非空又没有标记时，拒绝运行。
 - **判定类**按顺序执行：
-  1. `geo-facts init STORE --project-id bench-auto --now T`；
-  2. 把 store-src/entities.jsonl 追加到 `STORE/entities.jsonl`（CLI 约定里没有导入实体的命令，按事实库目录格式直接追加）；
-  3. `geo-facts import STORE --input facts.csv --format csv --now T`；
+  1. `geo-facts init STORE --project-id bench-auto --synthetic --now T`；
+  2. `geo-facts import STORE --input store-src/entities.jsonl --format json --now T`（导入实体）；
+  3. `geo-facts import STORE --input store-src/facts.csv --format csv --now T`（导入事实）；
   4. `geo-facts judge --store STORE --observations observations.jsonl --as-of <meta.as_of> --out judgments.jsonl --claims-out claims.jsonl --now T`。
 - **注入类**：对每份稿件执行 `geo-facts gate --draft FILE --now T --json`，可以并行。
 - 任一 CLI 步骤失败，该部分记为“运行失败”，整次运行不达标。

@@ -8,8 +8,8 @@
 
 流程：
 1. 用 benchmarks/generate.py 在工作目录下现场生成数据（data/）。
-2. 判定类：`init` → 把 store-src/entities.jsonl 追加进事实库的 entities.jsonl → `import`（facts.csv）
-   → `judge`（输出 judgments.jsonl 与 claims.jsonl）；按“claim 的 span 落在 gold 的 span 内”对齐到金标，
+2. 判定类：`init --synthetic` → `import`（store-src/entities.jsonl，实体）→ `import`（facts.csv，
+   导入模板格式的事实源）→ `judge`（输出 judgments.jsonl 与 claims.jsonl）；按“claim 的 span 落在 gold 的 span 内”对齐到金标，
    计算矛盾召回率、矛盾精确率、条件不同被误判为矛盾的比例。
 3. 注入类：对 injection/ 下每份稿件运行 `gate`，计算攻击检出率与正常样本误拦率。
 4. 按门槛判定（不达标退出 1），并在 benchmarks/runs.jsonl 追加一行运行记录。
@@ -367,26 +367,30 @@ def run_judgment(data: Path, work: Path, runner: Runner, now: str, as_of: str) -
     claims_path = work / "claims.jsonl"
     try:
         run_step(
-            runner, "init", ["init", str(store), "--project-id", PROJECT_ID, "--now", now, "--json"]
-        )
-        entities = (data / "store-src" / "entities.jsonl").read_text(encoding="utf-8")
-        with (store / "entities.jsonl").open("a", encoding="utf-8", newline="\n") as handle:
-            handle.write(entities)
-        run_step(
             runner,
-            "import",
-            [
-                "import",
-                str(store),
-                "--input",
-                str(data / "store-src" / "facts.csv"),
-                "--format",
-                "csv",
-                "--now",
-                now,
-                "--json",
-            ],
+            "init",
+            ["init", str(store), "--project-id", PROJECT_ID, "--synthetic", "--now", now, "--json"],
         )
+        # 先导入实体（json 格式的 entity 记录），再导入事实源（导入模板格式的 csv）。
+        for step, name, fmt in (
+            ("import-entities", "entities.jsonl", "json"),
+            ("import", "facts.csv", "csv"),
+        ):
+            run_step(
+                runner,
+                step,
+                [
+                    "import",
+                    str(store),
+                    "--input",
+                    str(data / "store-src" / name),
+                    "--format",
+                    fmt,
+                    "--now",
+                    now,
+                    "--json",
+                ],
+            )
         run_step(
             runner,
             "judge",

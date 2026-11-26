@@ -217,8 +217,84 @@ def test_facts_csv_matches_facts_json(data: dict[str, Path]) -> None:
         assert row["attribute"] == fact["attribute"]
         assert row["value"] == str(fact["value"])
         assert row["valid_until"] == (fact["valid_until"] or "")
-        conditions = dict(item.split("=", 1) for item in row["conditions"].split(";") if item)
+        # 导入模板的写法：条件“键=值; 键=值”，属性别名用分号分隔。
+        conditions = dict(
+            item.strip().split("=", 1) for item in row["conditions"].split(";") if item.strip()
+        )
         assert conditions == fact["conditions"]
+        assert [item.strip() for item in row["aliases"].split(";") if item.strip()] == fact[
+            "aliases"
+        ]
+
+
+def test_facts_csv_uses_the_public_import_template(data: dict[str, Path]) -> None:
+    from conftest import run_cli_json
+
+    code, template = run_cli_json("import", "--template", "csv")
+    assert code == 0
+    header = (data["dev"] / "store-src" / "facts.csv").read_text(encoding="utf-8").splitlines()[0]
+    # 模板内容的表头（version 列只出现在导出文件里，模板不带）。
+    template_header = template["content"].lstrip(chr(0xFEFF)).splitlines()[0]
+    assert header == template_header
+
+
+SAME_FIELDS = (
+    "fact_id",
+    "version",
+    "project_id",
+    "entity_id",
+    "attribute",
+    "value",
+    "unit",
+    "conditions",
+    "zone",
+    "source_tier",
+    "content_use",
+    "is_core",
+    "evidence",
+    "valid_from",
+    "valid_until",
+    "status",
+    "aliases",
+    "synthetic",
+)
+
+
+def test_store_sources_import_through_the_cli(data: dict[str, Path], tmp_path: Path) -> None:
+    """实体与事实都经 `geo-facts import` 导入；同一 fact_id 的两行成为版本 1 与版本 2。"""
+    from conftest import run_cli_json
+
+    store = tmp_path / "store"
+    source = data["dev"] / "store-src"
+    code, _ = run_cli_json(
+        "init", str(store), "--project-id", "bench-auto", "--synthetic", "--now", NOW
+    )
+    assert code == 0
+    entities = read_jsonl(source / "entities.jsonl")
+    code, result = run_cli_json(
+        "import", str(store), "--input", str(source / "entities.jsonl"), "--now", NOW
+    )
+    assert code == 0
+    assert result["entities"]["created"] == len(entities)
+    code, result = run_cli_json(
+        "import", str(store), "--input", str(source / "facts.csv"), "--now", NOW
+    )
+    assert code == 0, result
+    assert result["errors"] == []
+    assert result["notices"] == []
+    expected = facts_of(data["dev"])
+    assert result["facts"]["created"] + result["facts"]["new_versions"] == len(expected)
+    imported = read_jsonl(store / "facts.jsonl")
+    assert [{k: f.get(k) for k in SAME_FIELDS} for f in imported] == [
+        {k: f.get(k) for k in SAME_FIELDS} for f in expected
+    ]
+    versions: dict[str, list[int]] = {}
+    for fact in imported:
+        versions.setdefault(fact["fact_id"], []).append(fact["version"])
+    assert any(numbers == [1, 2] for numbers in versions.values())
+    assert all(numbers == list(range(1, len(numbers) + 1)) for numbers in versions.values())
+    stored_entities = {e["entity_id"]: e for e in read_jsonl(store / "entities.jsonl")}
+    assert stored_entities == {e["entity_id"]: e for e in entities}
 
 
 # ------------------------------------------------------------------ 金标自洽（独立的极简解析）
@@ -706,9 +782,12 @@ def test_run_with_a_perfect_fake_passes_and_records(tmp_path: Path) -> None:
     assert judgment_metrics["contradiction_precision"] == 1.0
     assert judgment_metrics["agreement"] == 1.0  # 一句多陈述也按实体属性分开对齐
     assert result["parts"]["injection"]["metrics"]["attack_detection_rate"] == 1.0
-    store_entities = (tmp_path / "work" / "store" / "entities.jsonl").read_text(encoding="utf-8")
-    assert "product-lanxu-s7" in store_entities
-    assert [call[0] for call in fake.calls[:3]] == ["init", "import", "judge"]
+    # 实体与事实都经 import 子命令导入（不直接改事实库文件）。
+    assert [call[0] for call in fake.calls[:4]] == ["init", "import", "import", "judge"]
+    assert "--synthetic" in fake.calls[0]
+    inputs = [Path(call[call.index("--input") + 1]).name for call in fake.calls[1:3]]
+    assert inputs == ["entities.jsonl", "facts.csv"]
+    assert not (tmp_path / "work" / "store" / "entities.jsonl").exists()
     records = read_jsonl(runs)
     assert len(records) == 1
     assert records[0]["time"] == NOW
@@ -782,6 +861,18 @@ def test_failed_cli_step_fails_the_run(tmp_path: Path) -> None:
     text = bench.render(result)
     assert "运行失败——步骤 init 退出码 2" in text
     assert "注入类：未运行" in text
+    # 实体导入失败同样让整次运行不达标，并指明是哪一步。
+    result = bench.run(
+        "dev",
+        workdir=tmp_path / "work2",
+        now=NOW,
+        only="judgment",
+        runner=FakeCLI(fail="import"),
+        runs_file=tmp_path / "runs.jsonl",
+        commit=COMMIT,
+    )
+    assert result["passed"] is False
+    assert result["parts"]["judgment"]["error"]["step"] == "import-entities"
 
 
 def test_only_injection_marks_the_run_incomplete(tmp_path: Path) -> None:
