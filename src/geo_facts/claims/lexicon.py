@@ -41,7 +41,7 @@ DEFAULT_DIMENSIONS: dict[str, frozenset[str | None]] = {
 TIGHT_PHRASES: frozenset[str] = frozenset({"卖"})
 # 同一概念下事实的取值类型不一致时取排位高的（日期 > 型号 > 数值 > 文本）。
 _KIND_RANK: dict[str, int] = {"text": 0, "numeric": 1, "model": 2, "date": 3}
-_MODEL_CODE = re.compile(r"^(?=.*[a-z])(?=.*\d)[a-z0-9]+(?:[-_.][a-z0-9]+)*$")
+_MODEL_CODE = re.compile(r"^(?=.*[a-z])(?=.*\d)[a-z0-9]+(?:[-_. ][a-z0-9]+)*$")
 
 
 def looks_like_model_code(text: str) -> bool:

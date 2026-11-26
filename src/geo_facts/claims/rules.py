@@ -137,7 +137,8 @@ FILLERS: tuple[str, ...] = tuple(
 )
 COMPOUND_CONNECTORS = frozenset({"或", "或者", "和", "及", "以及", "/"})
 _MODEL_TOKEN = re.compile(r"[a-z]{1,4}-?\d{1,4}[a-z0-9]*(?![a-z0-9])")
-_CODE_TOKEN = re.compile(r"(?<![a-z0-9])[a-z0-9]+(?:[-_.][a-z0-9]+)*(?![a-z0-9])")
+# 型号写法：字母数字段之间可以有连字符、下划线、点或一个空格（LX-M220、LX M220）。
+_CODE_TOKEN = re.compile(r"(?<![a-z0-9])[a-z0-9]+(?:[-_. ][a-z0-9]+)*(?![a-z0-9])")
 _SOC = re.compile(r"(?<![\d.])(\d{1,3}) ?% ?[-~至到] ?(\d{1,3}) ?%")
 # 引用角标与列表序号：[1]、[^2]、【3】、〔4〕，行首的“1.”“2、”“3)”。上标数字另行处理。
 _NOISE = re.compile(
