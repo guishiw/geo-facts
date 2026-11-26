@@ -78,10 +78,22 @@ def compare(raw: str, fmt: str = "md", **kwargs: Any) -> list[Any]:
     return run_check(CHECK, raw, fmt, entities=ENTITIES, **kwargs)
 
 
+STORE_META = {
+    "schema_version": "1.0",
+    "store_id": "store-auto-demo",
+    "project_id": "auto-demo",
+    "timezone": "Asia/Shanghai",
+    "created_at": "2026-10-08T02:00:00Z",
+    "synthetic": True,
+}
+
+
 def write_store(path: Path, records: list[dict[str, Any]]) -> Path:
+    """只含实体的事实库（没有事实）：store.json + entities.jsonl。"""
     path.mkdir(parents=True, exist_ok=True)
     lines = "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records)
     (path / "entities.jsonl").write_text(lines, encoding="utf-8")
+    (path / "store.json").write_text(json.dumps(STORE_META), encoding="utf-8")
     return path
 
 

@@ -30,6 +30,7 @@ from geo_facts.gate.model import (
     GateContext,
 )
 from geo_facts.jsonl import write_json
+from geo_facts.store import load_store
 from geo_facts.timeutil import DEFAULT_TIMEZONE, parse_utc, zone
 
 EXCERPT_PREVIEW = 60
@@ -95,6 +96,9 @@ def run(args: argparse.Namespace) -> CommandResult:
     as_of = _parse_as_of(args.as_of) if args.as_of else now.astimezone(zone(timezone)).date()
     meta = load_meta(Path(args.meta), timezone) if args.meta else None
     entities = load_entities(store) if store is not None else None
+    # --store 必须是完整的事实库（store.json、entities.jsonl、facts.jsonl 逐行合契约），
+    # 事实类检查按 --as-of 取其中的有效事实。
+    fact_store = load_store(store) if store is not None else None
     lexicons = load_lexicons([Path(item) for item in args.lexicon_dir or []])
     corpus = load_corpus(Path(args.corpus), timezone) if args.corpus else None
     ctx = GateContext(
@@ -106,6 +110,7 @@ def run(args: argparse.Namespace) -> CommandResult:
         lexicons=lexicons,
         corpus=corpus,
         draft_path=draft_path,
+        fact_store=fact_store,
     )
     report = engine.evaluate(draft, meta, ctx)
     data = report.to_dict()
@@ -151,7 +156,7 @@ def register(subparsers: SubParsers) -> None:
         subparsers,
         "gate",
         run,
-        help="发布前闸门：检查稿件的隐藏文本、提示词注入、时间、词库、竞品比较、重复与 AI 标识",
+        help="发布前闸门：检查稿件的事实、隐藏文本、提示词注入、时间、词库、竞品比较、重复与 AI 标识",
         description=(
             "发布前闸门：对稿件做发布前检查，给出 pass / review / block 与逐条建议。"
             "有 block 退出 1，只有 review 退出 5，无发现退出 0。闸门只给建议和状态，不负责发布。"
@@ -159,7 +164,10 @@ def register(subparsers: SubParsers) -> None:
     )
     parser.add_argument("--draft", required=True, help="稿件文件（.md / .txt / .html）")
     parser.add_argument("--meta", help="稿件 meta（JSON），可缺省")
-    parser.add_argument("--store", help="事实库目录（读取 store.json 的时区与 entities.jsonl）")
+    parser.add_argument(
+        "--store",
+        help="事实库目录（事实类检查、竞品名称识别与时区；不给则事实类与竞品检查不执行）",
+    )
     parser.add_argument(
         "--lexicon-dir",
         dest="lexicon_dir",

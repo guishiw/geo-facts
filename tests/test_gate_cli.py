@@ -14,7 +14,8 @@ from hypothesis import strategies as st
 
 from geo_facts.gate import engine
 from geo_facts.gate.checks import ALL_CHECKS
-from geo_facts.gate.document import Draft, parse_draft
+from geo_facts.gate.document import Draft
+from geo_facts.gate.entities import store_timezone
 from geo_facts.gate.meta import Meta
 from geo_facts.gate.model import (
     RULE_HIDDEN_TEXT,
@@ -71,14 +72,13 @@ def test_skipped_checks_are_reported_not_run() -> None:
     assert data["checks"][0]["status"] == "skipped"
 
 
-def test_fact_checks_are_registered_but_not_enabled() -> None:
+def test_fact_checks_are_registered_and_skipped_without_store() -> None:
     data = evaluate("正文").to_dict()
     skipped = {item["check"]: item for item in data["skipped_checks"]}
     assert skipped["facts"]["rule_ids"] == ["G-FACT-CONTRADICTION", "G-FACT-STALE"]
-    assert "未启用" in skipped["facts"]["reason"]
+    assert "未提供 --store" in skipped["facts"]["reason"]
     facts = next(check for check in ALL_CHECKS if check.name == "facts")
-    with pytest.raises(NotImplementedError):
-        facts.run(parse_draft("x", "txt"), None, make_ctx())
+    assert facts.unavailable(None, make_ctx()) is not None
 
 
 def test_engine_rejects_undeclared_rules_and_duplicate_names() -> None:
@@ -216,20 +216,29 @@ def test_cli_text_output_shortens_long_excerpts(tmp_path: Path) -> None:
     assert line.endswith("…")
 
 
+def _init_store(path: Path, *extra: str) -> Path:
+    code, _ = run_cli_json(
+        "init", str(path), "--project-id", "gate-test", "--now", NOW_TEXT, *extra
+    )
+    assert code == 0
+    return path
+
+
 def test_cli_store_timezone_and_as_of(tmp_path: Path) -> None:
-    store = tmp_path / "store"
-    store.mkdir()
-    write(store / "store.json", json.dumps({"timezone": "UTC"}))
-    write(store / "entities.jsonl", "")
+    # --store 是 `geo-facts init` 建的事实库；时区取 store.json。
+    store = _init_store(tmp_path / "store", "--timezone", "UTC")
     _, data = gate(tmp_path, "正文", "d.md", "--store", str(store), "--as-of", "2026-09-30")
     assert data["timezone"] == "UTC"
     assert data["as_of"] == "2026-09-30"
-    store2 = tmp_path / "store2"
-    store2.mkdir()
-    write(store2 / "store.json", json.dumps({"store_id": "s"}))
-    write(store2 / "entities.jsonl", "")
+    store2 = _init_store(tmp_path / "store2")
     _, data = gate(tmp_path, "正文", "d.md", "--store", str(store2))
     assert data["timezone"] == "Asia/Shanghai"
+    # store.json 没写时区时按 Asia/Shanghai 换算（读取函数本身的约定）。
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    write(bare / "store.json", json.dumps({"store_id": "s"}))
+    assert store_timezone(bare) == "Asia/Shanghai"
+    assert store_timezone(tmp_path) == "Asia/Shanghai"
 
 
 def test_cli_meta_is_used(tmp_path: Path) -> None:

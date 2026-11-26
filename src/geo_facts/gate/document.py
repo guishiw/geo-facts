@@ -285,6 +285,32 @@ class Draft:
         selected = self.select(channels)
         return build_index(selected, compact=compact, breaks=self._breaks(selected))
 
+    def plain_index(self, *channels: str) -> TextIndex:
+        """选定类别的解码文本（不做 NFKC、不转小写，只去掉不可见字符），每个字符带原文区间。
+
+        块之间与 `text_of` 一样插入一个不属于任何片段的换行。陈述拆解在这段文本上进行，
+        再用 `raw_span` 把陈述位置映射回原文。
+        """
+        selected = self.select(channels)
+        chars: list[str] = []
+        starts: list[int] = []
+        ends: list[int] = []
+        owners: list[int] = []
+        for (owner, piece), cut in zip(selected, self._breaks(selected), strict=True):
+            if cut:
+                chars.append("\n")
+                starts.append(piece.start)
+                ends.append(piece.start)
+                owners.append(-1)
+            for char, start, end in zip(piece.text, piece.starts, piece.ends, strict=True):
+                if is_hidden_char(char):
+                    continue
+                chars.append(char)
+                starts.append(start)
+                ends.append(end)
+                owners.append(owner)
+        return TextIndex("".join(chars), tuple(starts), tuple(ends), tuple(owners))
+
 
 def _boundary(previous: Piece, piece: Piece) -> bool:
     return (

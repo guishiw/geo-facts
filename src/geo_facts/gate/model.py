@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from geo_facts.gate.entities import Entity
     from geo_facts.gate.lexicon import Lexicon
     from geo_facts.gate.meta import Meta
+    from geo_facts.store import FactStore
 
 RESULT_BLOCK = "block"
 RESULT_REVIEW = "review"
@@ -182,7 +183,8 @@ class Finding:
 class GateContext:
     """检查项共用的上下文。
 
-    - store：`--store` 目录（事实类检查要用；本分支只读 entities.jsonl / store.json）；
+    - store：`--store` 目录；
+    - fact_store：`--store` 读出的事实库（事实类检查用），None 表示没有提供 `--store`；
     - as_of：按哪一天取有效事实（事实类检查要用）；
     - now：判断“时间在未来”的基准（`--now` 或当前时间，UTC）；
     - timezone：把 UTC 时间换算成自然日的时区（store.json 的 timezone，缺省 Asia/Shanghai）；
@@ -200,6 +202,7 @@ class GateContext:
     lexicons: tuple[Lexicon, ...] = ()
     corpus: Corpus | None = None
     draft_path: Path | None = None
+    fact_store: FactStore | None = None
 
 
 CheckFn = Callable[["Draft", "Meta | None", GateContext], list[Finding]]
