@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "lexicon_id": "generic-sample",
+  "industry": "generic",
+  "description": "通用示例词库，未经法务审阅，仅作演示；行业词库请通过 --lexicon-dir 从外部目录加载",
+  "synthetic": true,
+  "entries": [
+    {"term": "最佳", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "最好", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "最优", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "最强", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "顶级", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "极致", "match": "literal", "category": "superlative", "risk_level": "low", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "史无前例", "match": "literal", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "极限词"},
+    {"term": "全网最低", "match": "literal", "category": "superlative", "risk_level": "high", "clause": "046 §8.3.5", "note": "极限词（价格）"},
+    {"term": "(?:全国|全球|世界|行业|同级|销量|排名)\\s*第一|第一\\s*品牌", "match": "regex", "category": "superlative", "risk_level": "high", "clause": "046 §8.3.5", "note": "排名类极限词"},
+    {"term": "the best|number one|no\\. ?1", "match": "regex", "category": "superlative", "risk_level": "medium", "clause": "046 §8.3.5", "note": "英文极限词"},
+    {"term": "保证", "match": "literal", "category": "exaggerated_promise", "risk_level": "high", "clause": "046 §8.3.5", "note": "承诺用语"},
+    {"term": "绝对", "match": "literal", "category": "exaggerated_promise", "risk_level": "medium", "clause": "046 §8.3.5", "note": "绝对化用语"},
+    {"term": "零风险", "match": "literal", "category": "exaggerated_promise", "risk_level": "high", "clause": "046 §8.3.5", "note": "夸大承诺"},
+    {"term": "永不", "match": "literal", "category": "exaggerated_promise", "risk_level": "medium", "clause": "046 §8.3.5", "note": "绝对化用语"},
+    {"term": "(?:百分之百|100\\s*%)\\s*(?:有效|安全|满意|成功)", "match": "regex", "category": "exaggerated_promise", "risk_level": "high", "clause": "046 §8.3.5", "note": "夸大承诺"},
+    {"term": "稳赚|包赚|躺赚", "match": "regex", "category": "exaggerated_promise", "risk_level": "high", "clause": "046 §8.3.5", "note": "收益承诺"},
+    {"term": "国家级", "match": "literal", "category": "industry_sensitive", "risk_level": "medium", "clause": "046 §8.3.5", "note": "敏感用语"},
+    {"term": "特供|专供", "match": "regex", "category": "industry_sensitive", "risk_level": "medium", "clause": "046 §8.3.5", "note": "敏感用语"}
+  ]
+}

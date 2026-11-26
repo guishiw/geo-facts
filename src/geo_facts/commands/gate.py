@@ -15,9 +15,11 @@ from geo_facts.canon import sha256_bytes
 from geo_facts.cli import PRECHECK_NOTICE, CommandResult, SubParsers, add_command
 from geo_facts.errors import EXIT_CHECK_FAILED, EXIT_OK, InputError
 from geo_facts.gate import engine
+from geo_facts.gate.corpus import load_corpus
 from geo_facts.gate.document import load_draft
-from geo_facts.gate.entities import store_timezone
+from geo_facts.gate.entities import load_entities, store_timezone
 from geo_facts.gate.invisible import is_hidden_char
+from geo_facts.gate.lexicon import load_lexicons
 from geo_facts.gate.meta import load_meta
 from geo_facts.gate.model import (
     EXIT_REVIEW,
@@ -92,11 +94,17 @@ def run(args: argparse.Namespace) -> CommandResult:
     timezone = store_timezone(store) if store is not None else DEFAULT_TIMEZONE
     as_of = _parse_as_of(args.as_of) if args.as_of else now.astimezone(zone(timezone)).date()
     meta = load_meta(Path(args.meta), timezone) if args.meta else None
+    entities = load_entities(store) if store is not None else None
+    lexicons = load_lexicons([Path(item) for item in args.lexicon_dir or []])
+    corpus = load_corpus(Path(args.corpus), timezone) if args.corpus else None
     ctx = GateContext(
         now=now,
         as_of=as_of,
         timezone=timezone,
         store=store,
+        entities=entities,
+        lexicons=lexicons,
+        corpus=corpus,
         draft_path=draft_path,
     )
     report = engine.evaluate(draft, meta, ctx)
@@ -110,6 +118,20 @@ def run(args: argparse.Namespace) -> CommandResult:
     data["meta_provided"] = meta is not None
     data["as_of"] = as_of.isoformat()
     data["timezone"] = timezone
+    data["lexicons"] = [lexicon.summary() for lexicon in lexicons]
+    data["entities"] = (
+        None
+        if entities is None
+        else {
+            "total": len(entities),
+            "competitors": sum(1 for entity in entities if entity.role == "competitor"),
+        }
+    )
+    data["corpus"] = (
+        None
+        if corpus is None
+        else {"files": len(corpus.docs), "without_brand_or_topic": corpus.without_scope}
+    )
     data["precheck_notice"] = PRECHECK_NOTICE
     if args.out:
         write_json(Path(args.out), data)
@@ -138,6 +160,13 @@ def register(subparsers: SubParsers) -> None:
     parser.add_argument("--draft", required=True, help="稿件文件（.md / .txt / .html）")
     parser.add_argument("--meta", help="稿件 meta（JSON），可缺省")
     parser.add_argument("--store", help="事实库目录（读取 store.json 的时区与 entities.jsonl）")
+    parser.add_argument(
+        "--lexicon-dir",
+        dest="lexicon_dir",
+        action="append",
+        help="外部词库目录（加载其中所有 *.json，可重复）；内置通用示例词库总会加载",
+    )
+    parser.add_argument("--corpus", help="既有稿件目录（稿件 + 同名 .meta.json），用于近似重复检查")
     parser.add_argument("--as-of", dest="as_of", help="按该日取有效事实（YYYY-MM-DD）")
     parser.add_argument("--out", help="把结果 JSON 写入该文件")
     parser.add_argument("--now", help="当前时间（UTC，如 2026-10-08T02:00:00Z），传入后输出可复现")

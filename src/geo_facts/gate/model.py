@@ -19,7 +19,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from geo_facts.gate.corpus import Corpus
     from geo_facts.gate.document import Draft
+    from geo_facts.gate.entities import Entity
+    from geo_facts.gate.lexicon import Lexicon
     from geo_facts.gate.meta import Meta
 
 RESULT_BLOCK = "block"
@@ -183,13 +186,19 @@ class GateContext:
     - as_of：按哪一天取有效事实（事实类检查要用）；
     - now：判断“时间在未来”的基准（`--now` 或当前时间，UTC）；
     - timezone：把 UTC 时间换算成自然日的时区（store.json 的 timezone，缺省 Asia/Shanghai）；
-    - draft_path：稿件路径（不写入结果）。
+    - entities：事实库实体（entities.jsonl），None 表示没有提供 `--store`；
+    - lexicons：已加载的词库（内置通用示例词库 + `--lexicon-dir`）；
+    - corpus：`--corpus` 既有稿件，None 表示未提供；
+    - draft_path：稿件路径（只用于在 corpus 中排除稿件自身，不写入结果）。
     """
 
     now: datetime
     as_of: date
     timezone: str
     store: Path | None = None
+    entities: tuple[Entity, ...] | None = None
+    lexicons: tuple[Lexicon, ...] = ()
+    corpus: Corpus | None = None
     draft_path: Path | None = None
 
 

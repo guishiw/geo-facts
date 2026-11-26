@@ -6,7 +6,17 @@
 
 from __future__ import annotations
 
-from geo_facts.gate.checks import facts, hidden_text, injection, time_forged
+from geo_facts.gate.checks import (
+    ai_label,
+    competitor,
+    facts,
+    hidden_text,
+    injection,
+    lexicon_hits,
+    near_duplicate,
+    rx_audience,
+    time_forged,
+)
 from geo_facts.gate.model import Check
 
 ALL_CHECKS: tuple[Check, ...] = (
@@ -14,4 +24,9 @@ ALL_CHECKS: tuple[Check, ...] = (
     hidden_text.CHECK,
     injection.CHECK,
     time_forged.CHECK,
+    lexicon_hits.CHECK,
+    competitor.CHECK,
+    rx_audience.CHECK,
+    near_duplicate.CHECK,
+    ai_label.CHECK,
 )
